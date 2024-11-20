@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["Isuru Jinasena <iujinasena@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11,<3.12"
+fastapi = "^0.109.1"
+python-dotenv = "^1.0.0"
+python-multipart = "0.0.9"
+uvicorn = "^0.23.2"
+PyMuPDF = "1.24.9"
+ollama = "0.3.3"
+spire-doc = "^12.7.1"
+plum-dispatch = "1.7.4"
+
+[build-system]
+requires = [ "poetry-core" ]
+build-backend = "poetry.core.masonry.api"
