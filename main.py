@@ -37,7 +37,7 @@ async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None
         file_extension = Path(file.filename).suffix.lower()
         logging.info(f"Uploaded file extension: {file_extension}")
 
-        if file_extension not in [".pdf", ".docx"]:
+        if file_extension not in [".pdf", ".docx", ".jpg", ".jpeg", ".png"]:
             logging.warning(f"Invalid file type: {file_extension}")
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
@@ -72,8 +72,11 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
     if file_extension == ".docx":
         image_paths = docx_to_images(file_storage_path)
 
-    else:
+    elif file_extension == ".pdf":
         image_paths = pdf_to_images(file_storage_path)
+    
+    else:
+        image_paths = [file_storage_path]
     
     markdown_content = get_vlm_response(vlm_name, sys_prompt, image_paths)
 
