@@ -21,6 +21,10 @@ app = FastAPI()
 # temporary storage for pdfs and images
 TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
 
+# logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
 # storage for .md files
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 
@@ -34,21 +38,25 @@ if not os.path.exists(OUTPUT_DIR):
 @app.post("/api/get_markdown")
 async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None), system_prompt: str | None = Form(None)):
     try:
+        if file.filename == "":
+            logger.warning(f"No file uploaded")
+            raise HTTPException(status_code=400, detail="No file uploaded")
+         
         file_extension = Path(file.filename).suffix.lower()
-        logging.info(f"Uploaded file extension: {file_extension}")
+        logger.info(f"Uploaded file extension: {file_extension}")
 
         if file_extension not in [".pdf", ".docx", ".jpg", ".jpeg", ".png"]:
-            logging.warning(f"Invalid file type: {file_extension}")
+            logger.warning(f"Invalid file type: {file_extension}")
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
-        await process_file(file, file_extension, vlm, system_prompt)
+        response = await process_file(file, file_extension, vlm, system_prompt)
 
-        logging.info("Document converted successfully")
-        return {'message': 'Document conversion completed!'}
+        logger.info("Document converted successfully")
+        return {'markdown': response}
 
     except Exception as e:
-        logging.error(f"HTTPException: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"An error occurred during conversion: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred during conversion: {str(e)}")
 
 # process the input file (.pdf)
 async def process_file(file: UploadFile, file_extension: str, vlm: str, system_prompt: str):
@@ -83,6 +91,8 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
     save_md_file(markdown_content)
 
     clean_temp_storage(TEMP_STORAGE_DIR)
+
+    return markdown_content
 
 # convert the docx into images and temporarily store them
 def docx_to_images(file_path: str):
