@@ -1,8 +1,8 @@
 # Effectz-VLM-OCR by [Effectz.AI](https://www.effectz.ai/)  ![Logo of Effectz.AI](https://github.com/effectz-ai/Effectz_VLM_OCR/blob/main/img/effectzai.png)
 
 ## Welcome to Effectz-VLM-OCR
-### Effectz-VLM-OCR => Convert Documents into Markdown Format with VLMs 
-Effectz-VLM-OCR helps you easily convert documents (.pdf and .docx) into markdown format powered by **Vision Language Models (VLMs)**. You can customize the VLM and the system prompt too.
+### Effectz-VLM-OCR => Convert Documents and Images into Markdown Format with VLMs 
+Effectz-VLM-OCR helps you easily convert documents and images into markdown format powered by **Vision Language Models (VLMs)**. You can customize the VLM and the system prompt too.
 
 
 - [💾 Effectz-VLM-OCR Walkthrough](#effectz-vlm-ocr-walkthrough)
@@ -25,11 +25,11 @@ poetry shell
 python main.py
 ```
 
-### Convert Your Documents Into .md Format
+### Convert Your Documents and Images Into .md Format
 
 ```
 curl -X POST http://localhost:5001/api/get_markdown \
-  -F "file=@example.pdf" \
+  -F "file=@your_file" \
   -F "vlm=your_vlm" \
   -F "system_prompt=your_system_prompt"
 ```
@@ -41,10 +41,12 @@ curl -X POST http://localhost:5001/api/get_markdown \
 | -------------------------------------- | ----------- | ---------------------------- |
 | Ollama (e.g. llama3.2-vision:11b)      | ✅         | Local VLMs powered by Ollama |
 
-| 📁 Supported Document Types                   | Implemented | Description                                    |
-| --------------------------------------------- | ----------- | ---------------------------------------------- |
-| PDF                                           | ✅         | PDF files can be converted into .md format     |
-| DOCX                                          | ✅         | DOCX files can be converted into .md format    |
+| 📁 Supported Document/Image Types             | Implemented | Description                                      |
+| --------------------------------------------- | ----------- | ------------------------------------------------- |
+| PDF                                           | ✅         | PDF files can be converted into .md format        |
+| DOCX                                          | ✅         | DOCX files can be converted into .md format       |
+| JPG/JPEG                                      | ✅         | JPG/JPEG files can be converted into .md format   |
+| PNG                                           | ✅         | PNG files can be converted into .md format        |
 
 | 🆒 Cool Bonus         | Implemented | Description                                             |
 | --------------------- | ----------- | ------------------------------------------------------- |
