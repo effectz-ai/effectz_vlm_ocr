@@ -14,16 +14,20 @@ import ollama
 import fitz 
 from spire.doc import *
 from spire.doc.common import *
+from PIL import Image
+import torch
+from transformers import AutoImageProcessor
+from transformers.models.detr import DetrForSegmentation
 
 # initialize app
 app = FastAPI()
 
-# temporary storage for pdfs and images
-TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
-
 # logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
+
+# temporary storage for pdfs and images
+TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
 
 # storage for .md files
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
@@ -34,7 +38,7 @@ if not os.path.exists(TEMP_STORAGE_DIR):
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
-# POST
+# POST - /api/get_markdown
 @app.post("/api/get_markdown")
 async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None), system_prompt: str | None = Form(None)):
     try:
@@ -57,11 +61,36 @@ async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None
     except Exception as e:
         logger.error(f"An error occurred during conversion: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred during conversion: {str(e)}")
+    
+# POST - /api/layout_entity_markdown
+@app.post("/api/layout_entity_markdown")
+async def layout_entity_markdown(file: UploadFile = File(...), vlm: str | None = Form(None), system_prompt: str | None = Form(None), layout_model_type: str | None = Form(None)):
+    try:
+        if file.filename == "":
+            logger.warning(f"No file uploaded")
+            raise HTTPException(status_code=400, detail="No file uploaded")
+         
+        file_extension = Path(file.filename).suffix.lower()
+        logger.info(f"Uploaded file extension: {file_extension}")
+
+        if file_extension not in [".pdf", ".docx", ".jpg", ".jpeg", ".png"]:
+            logger.warning(f"Invalid file type: {file_extension}")
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
+        
+        response = await process_file(file, file_extension, vlm, system_prompt, layout_model_type, layout=True)
+
+        logger.info("Document converted successfully")
+        return {'markdown': response}
+
+    except Exception as e:
+        logger.error(f"An error occurred during conversion: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred during conversion: {str(e)}")
 
 # process the input file (.pdf)
-async def process_file(file: UploadFile, file_extension: str, vlm: str, system_prompt: str):
+async def process_file(file: UploadFile, file_extension: str, vlm: str, system_prompt: str, layout_model_type=None, layout=False):
     vlm_name = vlm if vlm is not None else os.getenv("VLM")
     sys_prompt = system_prompt if system_prompt is not None else os.getenv("SYSTEM_PROMPT")
+    layout_detection_model_type = layout_model_type if layout_model_type is not None else os.getenv("LAYOUT_DETECTION_MODEL_TYPE")
 
     if vlm_name is None:
         raise ValueError(
@@ -73,6 +102,11 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
             "Please set the system prompt"
         )
     
+    if layout_detection_model_type is None:
+        raise ValueError(
+            "Please set the layout detection model type"
+        )
+
     file_storage_path = f"{TEMP_STORAGE_DIR}/{file.filename}"
     with open(file_storage_path, "wb") as f:
             f.write(await file.read())
@@ -86,6 +120,11 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
     else:
         image_paths = [file_storage_path]
     
+    if layout:
+        if layout_detection_model_type == "hugging_face":
+            # pass first entity as the image for testing
+            image_paths = [layout_detection_hf(image_paths[0])[0]]
+
     markdown_content = get_vlm_response(vlm_name, sys_prompt, image_paths)
 
     save_md_file(markdown_content)
@@ -131,6 +170,51 @@ def pdf_to_images(file_path: str):
         break
 
     pdf_document.close()
+
+    return image_paths
+
+# layout detection using Hugging Face model
+def layout_detection_hf(file_path: str):
+    layout_detection_img_proc = AutoImageProcessor.from_pretrained(os.getenv("HF_IMG_PROC_NAME"))
+    layout_detection_hf_model = DetrForSegmentation.from_pretrained(os.getenv("HF_MODEL_NAME"))
+
+    if layout_detection_img_proc is None:
+        raise ValueError(
+            "Please set the Hugging Face layout detection image processor"
+        )
+    
+    if layout_detection_hf_model is None:
+        raise ValueError(
+            "Please set the Hugging Face layout detection model name"
+        )
+
+    img = Image.open(file_path).convert("RGB")
+
+    with torch.inference_mode():
+        input_ids = layout_detection_img_proc(img, return_tensors='pt')
+        output = layout_detection_hf_model(**input_ids)
+    
+    threshold=0.5
+
+    bbox_pred = layout_detection_img_proc.post_process_object_detection(
+        output,
+        threshold=threshold,
+        target_sizes=[img.size[::-1]]
+    )
+
+    detected_entities = bbox_pred[0]
+
+    image_paths = []
+
+    for idx, box in enumerate(detected_entities['boxes']):
+        x_min, y_min, x_max, y_max = map(int, box.tolist())
+        cropped_img = img.crop((x_min, y_min, x_max, y_max))  
+        final_image = Image.new("RGB", img.size, (255, 255, 255))
+        final_image.paste(cropped_img, (x_min, y_min))
+        final_image_name = f"entity_{idx}.png"
+        final_image_path = os.path.join(TEMP_STORAGE_DIR, final_image_name)
+        final_image.save(final_image_path)
+        image_paths.append(final_image_path)
 
     return image_paths
 
