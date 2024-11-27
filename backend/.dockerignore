@@ -1,0 +1,6 @@
+# Ignore storage
+temp_storage/
+output/
+
+# Ignore Python bytecode files
+__pycache__/
