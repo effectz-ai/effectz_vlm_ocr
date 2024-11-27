@@ -18,6 +18,8 @@ from PIL import Image
 import torch
 from transformers import AutoImageProcessor
 from transformers.models.detr import DetrForSegmentation
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.formrecognizer import DocumentAnalysisClient
 
 # initialize app
 app = FastAPI()
@@ -121,9 +123,13 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
         image_paths = [file_storage_path]
     
     if layout:
-        if layout_detection_model_type == "hugging_face":
-            # pass first entity as the image for testing
-            image_paths = [layout_detection_hf(image_paths[0])[0]]
+        if layout_detection_model_type == "azure":
+            bbox = layout_detection_azure(image_paths[0])
+        
+        elif layout_detection_model_type == "hugging_face":
+            bbox = layout_detection_hf(image_paths[0])
+
+        image_paths = [crop_images(image_paths[0], bbox)[0]]
 
     markdown_content = get_vlm_response(vlm_name, sys_prompt, image_paths)
 
@@ -173,6 +179,81 @@ def pdf_to_images(file_path: str):
 
     return image_paths
 
+# crop images according to bbox
+def crop_images(file_path: str, bbox: list[list]):
+    image_paths = []
+    img = Image.open(file_path).convert("RGB")
+
+    for idx, box in enumerate(bbox):
+        x_min, y_min, x_max, y_max = map(int, box)
+        cropped_img = img.crop((x_min, y_min, x_max, y_max))  
+        final_image = Image.new("RGB", img.size, (255, 255, 255))
+        final_image.paste(cropped_img, (x_min, y_min))
+        final_image_name = f"entity_{idx}.png"
+        final_image_path = os.path.join(TEMP_STORAGE_DIR, final_image_name)
+        final_image.save(final_image_path)
+        image_paths.append(final_image_path)
+
+    return image_paths
+
+# check layout overlapping
+def is_overlapping(box1, box2):
+    return not (
+        box1[2] < box2[0] or  
+        box1[0] > box2[2] or  
+        box1[3] < box2[1] or  
+        box1[1] > box2[3]    
+    )
+
+# remove overlapping layouts between paragraphs and tables
+def remove_overlapping(paragraphs, tables):
+    filtered_paragraphs = []
+    for paragraph in paragraphs:
+        if not any(is_overlapping(paragraph, table) for table in tables):
+            filtered_paragraphs.append(paragraph)
+    return filtered_paragraphs
+
+# layout detection using Azure
+def layout_detection_azure(file_path: str):
+    azure_endpoint = os.getenv("AZURE_ENDPOINT")
+    azure_key = os.getenv("AZURE_KEY")
+
+    document_analysis_client = DocumentAnalysisClient(
+        endpoint=azure_endpoint, credential=AzureKeyCredential(azure_key)
+    )
+
+    with open(file_path, "rb") as file:
+        poller = document_analysis_client.begin_analyze_document("prebuilt-layout", file)
+        result = poller.result()
+    
+    bbox_paragraphs = []
+    bbox_tables = []
+
+    for paragraph in result.paragraphs:
+        for region in paragraph.bounding_regions:
+            polygon = region.polygon
+            bounding_box = [
+                    min(point.x for point in polygon),
+                    min(point.y for point in polygon),
+                    max(point.x for point in polygon),
+                    max(point.y for point in polygon)
+                ]      
+            bbox_paragraphs.append(bounding_box)
+
+    for table in result.tables:
+        for region in table.bounding_regions:
+            polygon = region.polygon
+            bounding_box = [
+                    min(point.x for point in polygon),
+                    min(point.y for point in polygon),
+                    max(point.x for point in polygon),
+                    max(point.y for point in polygon)
+                ] 
+            bbox_tables.append(bounding_box)
+
+    filtered_paragraphs = remove_overlapping(bbox_paragraphs, bbox_tables)
+    return filtered_paragraphs + bbox_tables
+    
 # layout detection using Hugging Face model
 def layout_detection_hf(file_path: str):
     layout_detection_img_proc = AutoImageProcessor.from_pretrained(os.getenv("HF_IMG_PROC_NAME"))
@@ -194,7 +275,7 @@ def layout_detection_hf(file_path: str):
         input_ids = layout_detection_img_proc(img, return_tensors='pt')
         output = layout_detection_hf_model(**input_ids)
     
-    threshold=0.5
+    threshold=0.75
 
     bbox_pred = layout_detection_img_proc.post_process_object_detection(
         output,
@@ -204,19 +285,7 @@ def layout_detection_hf(file_path: str):
 
     detected_entities = bbox_pred[0]
 
-    image_paths = []
-
-    for idx, box in enumerate(detected_entities['boxes']):
-        x_min, y_min, x_max, y_max = map(int, box.tolist())
-        cropped_img = img.crop((x_min, y_min, x_max, y_max))  
-        final_image = Image.new("RGB", img.size, (255, 255, 255))
-        final_image.paste(cropped_img, (x_min, y_min))
-        final_image_name = f"entity_{idx}.png"
-        final_image_path = os.path.join(TEMP_STORAGE_DIR, final_image_name)
-        final_image.save(final_image_path)
-        image_paths.append(final_image_path)
-
-    return image_paths
+    return detected_entities['boxes']
 
 # get response from the VLM
 def get_vlm_response(vlm: str, system_prompt: str, image_path_list: list[str]):
