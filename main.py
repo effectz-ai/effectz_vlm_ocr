@@ -20,6 +20,8 @@ from transformers import AutoImageProcessor
 from transformers.models.detr import DetrForSegmentation
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
+from openai import OpenAI
+import base64
 
 # initialize app
 app = FastAPI()
@@ -42,7 +44,7 @@ if not os.path.exists(OUTPUT_DIR):
 
 # POST - /api/get_markdown
 @app.post("/api/get_markdown")
-async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None), system_prompt: str | None = Form(None)):
+async def get_markdown(file: UploadFile = File(...), system_prompt: str | None = Form(None), markdown_model_type: str | None = Form(None)):
     try:
         if file.filename == "":
             logger.warning(f"No file uploaded")
@@ -55,7 +57,7 @@ async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None
             logger.warning(f"Invalid file type: {file_extension}")
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
-        response = await process_file(file, file_extension, vlm, system_prompt)
+        response = await process_file(file, file_extension, system_prompt, markdown_model_type)
 
         logger.info("Document converted successfully")
         return {'markdown': response}
@@ -66,7 +68,7 @@ async def get_markdown(file: UploadFile = File(...), vlm: str | None = Form(None
     
 # POST - /api/layout_entity_markdown
 @app.post("/api/layout_entity_markdown")
-async def layout_entity_markdown(file: UploadFile = File(...), vlm: str | None = Form(None), system_prompt: str | None = Form(None), layout_model_type: str | None = Form(None)):
+async def layout_entity_markdown(file: UploadFile = File(...), system_prompt: str | None = Form(None), markdown_model_type: str | None = Form(None), layout_model_type: str | None = Form(None)):
     try:
         if file.filename == "":
             logger.warning(f"No file uploaded")
@@ -79,7 +81,7 @@ async def layout_entity_markdown(file: UploadFile = File(...), vlm: str | None =
             logger.warning(f"Invalid file type: {file_extension}")
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
-        response = await process_file(file, file_extension, vlm, system_prompt, layout_model_type, layout=True)
+        response = await process_file(file, file_extension, system_prompt, markdown_model_type, layout_model_type, layout=True)
 
         logger.info("Document converted successfully")
         return {'markdown': response}
@@ -89,24 +91,18 @@ async def layout_entity_markdown(file: UploadFile = File(...), vlm: str | None =
         raise HTTPException(status_code=500, detail=f"An error occurred during conversion: {str(e)}")
 
 # process the input file (.pdf)
-async def process_file(file: UploadFile, file_extension: str, vlm: str, system_prompt: str, layout_model_type=None, layout=False):
-    vlm_name = vlm if vlm is not None else os.getenv("VLM")
+async def process_file(file: UploadFile, file_extension: str, system_prompt: str, markdown_model_type: str, layout_model_type=None, layout=False):
     sys_prompt = system_prompt if system_prompt is not None else os.getenv("SYSTEM_PROMPT")
-    layout_detection_model_type = layout_model_type if layout_model_type is not None else os.getenv("LAYOUT_DETECTION_MODEL_TYPE")
-
-    if vlm_name is None:
-        raise ValueError(
-            "Please set the VLM"
-        )
+    markdown_generation_model_type = markdown_model_type if markdown_model_type is not None else os.getenv("MARKDOWN_GENERATION_MODEL_TYPE")
     
     if sys_prompt is None:
         raise ValueError(
             "Please set the system prompt"
         )
     
-    if layout_detection_model_type is None:
+    if markdown_generation_model_type is None:
         raise ValueError(
-            "Please set the layout detection model type"
+            "Please set the markdown generation model type"
         )
 
     file_storage_path = f"{TEMP_STORAGE_DIR}/{file.filename}"
@@ -123,6 +119,13 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
         image_paths = [file_storage_path]
     
     if layout:
+        layout_detection_model_type = layout_model_type if layout_model_type is not None else os.getenv("LAYOUT_DETECTION_MODEL_TYPE")
+
+        if layout_detection_model_type is None:
+            raise ValueError(
+                "Please set the layout detection model type"
+            )
+
         if layout_detection_model_type == "azure":
             bbox = layout_detection_azure(image_paths[0])
         
@@ -130,8 +133,12 @@ async def process_file(file: UploadFile, file_extension: str, vlm: str, system_p
             bbox = layout_detection_hf(image_paths[0])
 
         image_paths = [crop_images(image_paths[0], bbox)[0]]
-
-    markdown_content = get_vlm_response(vlm_name, sys_prompt, image_paths)
+    
+    if markdown_generation_model_type == "ollama":
+            markdown_content = get_ollama_vlm_response(sys_prompt, image_paths)
+        
+    elif markdown_generation_model_type == "openai":
+            markdown_content = get_openai_mllm_response(sys_prompt, image_paths)
 
     save_md_file(markdown_content)
 
@@ -287,10 +294,17 @@ def layout_detection_hf(file_path: str):
 
     return detected_entities['boxes']
 
-# get response from the VLM
-def get_vlm_response(vlm: str, system_prompt: str, image_path_list: list[str]):
+# get response from the Ollama VLM
+def get_ollama_vlm_response(system_prompt: str, image_path_list: list[str]):
+    vlm_name = os.getenv("OLLAMA_VLM")
+
+    if vlm_name is None:
+        raise ValueError(
+            "Please set the Ollama VLM"
+        )
+
     response = ollama.chat(
-        model=vlm, 
+        model=vlm_name, 
         messages=[
             {
                 'role': 'system',
@@ -304,6 +318,49 @@ def get_vlm_response(vlm: str, system_prompt: str, image_path_list: list[str]):
     )
 
     return response["message"]["content"]
+
+# get response from the OpenAI mllm
+def get_openai_mllm_response(system_prompt: str, image_path_list: list[str]):
+    openai_key = os.getenv("OPENAI_KEY")
+    mllm_name = os.getenv("OPENAI_MLLM")
+
+    if openai_key is None:
+        raise ValueError(
+            "Please set the OpenAI key"
+        )
+
+    if mllm_name is None:
+        raise ValueError(
+            "Please set the OpenAI MLLM"
+        )
+    
+    client = OpenAI(api_key=openai_key)
+
+    with open(image_path_list[0], "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+    response = client.chat.completions.create(
+        model=mllm_name,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": system_prompt,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url":  f"data:image/jpeg;base64,{base64_image}"
+                        },
+                    },
+                ],
+            }
+        ],
+    )
+
+    return response.choices[0].message.content
 
 # save the .md file
 def save_md_file(markdown_content: str):
