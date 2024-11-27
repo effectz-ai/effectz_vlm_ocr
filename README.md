@@ -2,7 +2,7 @@
 
 ## Welcome to Effectz-VLM-OCR
 ### Effectz-VLM-OCR => Convert Documents and Images into Markdown Format with VLMs 
-Effectz-VLM-OCR helps you easily convert documents and images into markdown format powered by **Vision Language Models (VLMs)**. You can customize the VLM and the system prompt too.
+Effectz-VLM-OCR helps you easily convert documents and images into markdown format powered by **Vision Language Models (VLMs)**. You can customize the system prompt, the markdown generation model type and the layout detection model type too.
 
 
 - [💾 Effectz-VLM-OCR Walkthrough](#effectz-vlm-ocr-walkthrough)
@@ -31,8 +31,8 @@ python main.py
 ```
 curl -X POST http://localhost:5001/api/get_markdown \
   -F "file=@your_file" \
-  -F "vlm=your_vlm" \
-  -F "system_prompt=your_system_prompt"
+  -F "system_prompt=your_system_prompt" \
+  -F "markdown_model_type=your_markdown_model_type"
 ```
 
 ### Convert Your Documents and Images Into .md Format (Layout entity wise)
@@ -40,17 +40,18 @@ curl -X POST http://localhost:5001/api/get_markdown \
 ```
 curl -X POST http://localhost:5001/api/layout_entity_markdown \
   -F "file=@your_file" \
-  -F "vlm=your_vlm" \
   -F "system_prompt=your_system_prompt" \
+  -F "markdown_model_type=your_markdown_model_type" \
   -F "layout_model_type=your_layout_model_type"
 ```
 
 
 ## Feature Lists
 
-| 🤖 VLM Support                       | Implemented | Description                  |
+| 🤖 VLM/MLLM Support                    | Implemented | Description                  |
 | -------------------------------------- | ----------- | ---------------------------- |
 | Ollama (e.g. llama3.2-vision:11b)      | ✅         | Local VLMs powered by Ollama |
+| OpenAI (e.g. gpt-4o-mini)              | ✅         | MLLMs by OpenAI              |
 
 | 🤖 Layout Detection Support                              | Implemented | Description                             |
 | -------------------------------------------------------- | ----------- | --------------------------------------- |
@@ -74,19 +75,19 @@ curl -X POST http://localhost:5001/api/layout_entity_markdown \
 
 Below is a comprehensive list of the API keys and variables you may require:
 
-| Environment Variable         | Value                                                      | Description                                                                       |
-| ---------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| APP_HOST                     | Your address to start the app                              | Set address                                                                       |
-| APP_PORT                     | Your port to start the app                                 | Set port                                                                          |
-| VLM                          | Your VLM name                                              | Set VLM                                                                           |
-| SYSTEM_PROMPT                | Your system prompt                                         | Set system prompt                                                                 |
-| LAYOUT_DETECTION_MODEL_TYPE  | Your layout detection model type                           | Set layout detection model type                                                   |
-| AZURE_ENDPOINT               | Your Azure endpoint                                        | Set Azure endpoint                                                                |
-| AZURE_KEY                    | Your Azure key                                             | Set Azure key                                                                     |
+| Environment Variable           | Value                                                      | Description                                                                       |
+| ------------------------------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| APP_HOST                       | Your address to start the app                              | Set address                                                                       |
+| APP_PORT                       | Your port to start the app                                 | Set port                                                                          |
+| SYSTEM_PROMPT                  | Your system prompt                                         | Set system prompt                                                                 |
+| LAYOUT_DETECTION_MODEL_TYPE    | Your layout detection model type                           | Set layout detection model type                                                   |
+| AZURE_KEY                      | Your Azure key                                             | Set Azure key                                                                     |
+| MARKDOWN_GENERATION_MODEL_TYPE | Your markdown generation model type                        | Set layout detection model type                                                   |
+| OPENAI_KEY                     | Your OpenAI key                                            | Set OpenAI key                                                                    |
 
 ## Special Notes
 
-- If you're using [Ollama](https://ollama.com/) for VLMs, you have to launch the Ollama app or open the terminal and type 'ollama serve' first.
+- If you're using [Ollama](https://ollama.com/) for VLMs (markdown generation), you have to launch the Ollama app or open the terminal and type 'ollama serve' first.
 - If you're using a Hugging Face model as the layout detection model, when you run Effectz-VLM-OCR for the first time, the model will be downloaded and stored. By default the models are downloaded and stored in:
   - Linux/MacOS: ~/.cache/huggingface/transformers/
   - Windows: C:\Users\YourUsername\.cache\huggingface\transformers\
