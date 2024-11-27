@@ -48,9 +48,14 @@ curl -X POST http://localhost:5001/api/layout_entity_markdown \
 
 ## Feature Lists
 
-| 🤖 Model Support                       | Implemented | Description                  |
+| 🤖 VLM Support                       | Implemented | Description                  |
 | -------------------------------------- | ----------- | ---------------------------- |
 | Ollama (e.g. llama3.2-vision:11b)      | ✅         | Local VLMs powered by Ollama |
+
+| 🤖 Layout Detection Support                              | Implemented | Description                             |
+| -------------------------------------------------------- | ----------- | --------------------------------------- |
+| Azure Layout                                             | ✅         | Azure Layout service                    |
+| Hugging Face models(e.g. cmarkea/detr-layout-detection)  | ✅         | Layout detection models in Hugging Face |
 
 | 📁 Supported Document/Image Types             | Implemented | Description                                      |
 | --------------------------------------------- | ----------- | ------------------------------------------------- |
@@ -76,6 +81,8 @@ Below is a comprehensive list of the API keys and variables you may require:
 | VLM                          | Your VLM name                                              | Set VLM                                                                           |
 | SYSTEM_PROMPT                | Your system prompt                                         | Set system prompt                                                                 |
 | LAYOUT_DETECTION_MODEL_TYPE  | Your layout detection model type                           | Set layout detection model type                                                   |
+| AZURE_ENDPOINT               | Your Azure endpoint                                        | Set Azure endpoint                                                                |
+| AZURE_KEY                    | Your Azure key                                             | Set Azure key                                                                     |
 
 ## Special Notes
 
