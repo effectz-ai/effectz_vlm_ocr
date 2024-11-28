@@ -14,10 +14,11 @@ function App() {
   }
 
   return (
-    <>
+    <div className='max-h-screen'>
       <FileUploader onFileSelect={handleFileSelect}/>
-      <PdfPreviwer fileUrl={pdfUrl}/>
-    </>
+      {pdfUrl && <PdfPreviwer fileUrl={pdfUrl}/>}
+      
+    </div>
   )
 }
 
