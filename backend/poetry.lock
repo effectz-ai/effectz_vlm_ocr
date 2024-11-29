@@ -388,13 +388,13 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "huggingface-hub"
-version = "0.26.2"
+version = "0.26.3"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "huggingface_hub-0.26.2-py3-none-any.whl", hash = "sha256:98c2a5a8e786c7b2cb6fdeb2740893cba4d53e312572ed3d8afafda65b128c46"},
-    {file = "huggingface_hub-0.26.2.tar.gz", hash = "sha256:b100d853465d965733964d123939ba287da60a547087783ddff8a323f340332b"},
+    {file = "huggingface_hub-0.26.3-py3-none-any.whl", hash = "sha256:e66aa99e569c2d5419240a9e553ad07245a5b1300350bfbc5a4945cf7432991b"},
+    {file = "huggingface_hub-0.26.3.tar.gz", hash = "sha256:90e1fe62ffc26757a073aaad618422b899ccf9447c2bba8c902a90bef5b42e1d"},
 ]
 
 [package.dependencies]
@@ -924,13 +924,13 @@ httpx = ">=0.27.0,<0.28.0"
 
 [[package]]
 name = "openai"
-version = "1.55.1"
+version = "1.55.3"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "openai-1.55.1-py3-none-any.whl", hash = "sha256:d10d96a4f9dc5f05d38dea389119ec8dcd24bc9698293c8357253c601b4a77a5"},
-    {file = "openai-1.55.1.tar.gz", hash = "sha256:471324321e7739214f16a544e801947a046d3c5d516fae8719a317234e4968d3"},
+    {file = "openai-1.55.3-py3-none-any.whl", hash = "sha256:2a235d0e1e312cd982f561b18c27692e253852f4e5fb6ccf08cb13540a9bdaa1"},
+    {file = "openai-1.55.3.tar.gz", hash = "sha256:547e85b94535469f137a779d8770c8c5adebd507c2cc6340ca401a7c4d5d16f0"},
 ]
 
 [package.dependencies]
@@ -1062,13 +1062,13 @@ files = [
 
 [[package]]
 name = "pydantic"
-version = "2.10.1"
+version = "2.10.2"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic-2.10.1-py3-none-any.whl", hash = "sha256:a8d20db84de64cf4a7d59e899c2caf0fe9d660c7cfc482528e7020d7dd189a7e"},
-    {file = "pydantic-2.10.1.tar.gz", hash = "sha256:a4daca2dc0aa429555e0656d6bf94873a7dc5f54ee42b1f5873d666fb3f35560"},
+    {file = "pydantic-2.10.2-py3-none-any.whl", hash = "sha256:cfb96e45951117c3024e6b67b25cdc33a3cb7b2fa62e239f7af1378358a1d99e"},
+    {file = "pydantic-2.10.2.tar.gz", hash = "sha256:2bc2d7f17232e0841cbba4641e65ba1eb6fafb3a08de3a091ff3ce14a197c4fa"},
 ]
 
 [package.dependencies]
@@ -1644,19 +1644,38 @@ files = [
 ]
 
 [[package]]
-name = "spire-doc"
+name = "Spire.Doc"
 version = "12.7.1"
 description = "A 100% standalone Word Python API for Processing Word Files"
 optional = false
 python-versions = ">=3.7"
 files = [
     {file = "Spire.Doc-12.7.1-py3-none-macosx_10_7_universal.whl", hash = "sha256:e28741779dae5a14e2b5138a5b4a9ec5960a5d6c2d7a2973ac7347e0b8e69cf0"},
-    {file = "Spire.Doc-12.7.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:68b0138f53bc4cb326a6aa904171c0e66e430337fb9ba0c3acaa74eb2ef567a5"},
+]
+
+[package.dependencies]
+plum-dispatch = "1.7.4"
+
+[package.source]
+type = "file"
+url = "wheels/Spire.Doc-12.7.1-py3-none-macosx_10_7_universal.whl"
+
+[[package]]
+name = "Spire.Doc"
+version = "12.7.1"
+description = "A 100% standalone Word Python API for Processing Word Files"
+optional = false
+python-versions = ">=3.7"
+files = [
     {file = "Spire.Doc-12.7.1-py3-none-win_amd64.whl", hash = "sha256:f7cf1a82272abb41a46372bd67d71bb5b59d3062be32732275d37c471929b432"},
 ]
 
 [package.dependencies]
 plum-dispatch = "1.7.4"
+
+[package.source]
+type = "file"
+url = "wheels/Spire.Doc-12.7.1-py3-none-win_amd64.whl"
 
 [[package]]
 name = "starlette"
@@ -2085,4 +2104,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11,<3.12"
-content-hash = "4509d284127cc8221660e6a52b336f7f620d43de6c4d78af02ceb2c700366f05"
+content-hash = "3186be27b7e4d33072ab0b7515cffa99437cd063c7834f5a4bdd7d3920a0b347"
