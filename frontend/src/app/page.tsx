@@ -3,6 +3,7 @@ import FileUploader from "@/components/FileUploader";
 import MarkdownViewer from "@/components/MarkdownViewer";
 import {useState} from "react";
 import Header from "@/components/Header";
+import axios from "axios";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -22,11 +23,7 @@ export default function Home() {
     formData.append('markdownModelType', markdownModelType);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/get_markdown`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
+      const {data} = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/get_markdown`, formData);
       return data.markdown;
     } catch (error) {
       console.error('Error:', error);

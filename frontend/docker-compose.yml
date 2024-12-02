@@ -1,0 +1,10 @@
+services:
+  ocr-frontend:
+    container_name: ocr-frontend
+    image: node:18-alpine
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/src/app
+    ports:
+      - "3004:3000"
+    command: sh -c "chmod +x /usr/src/app/startup.sh && /usr/src/app/startup.sh"
