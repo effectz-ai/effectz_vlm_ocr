@@ -1,6 +1,6 @@
 services:
   ocr-frontend:
-    container_name: ocr-backend
+    container_name: ocr-frontend
     image: node:18-alpine
     restart: unless-stopped
     volumes:
