@@ -18,10 +18,13 @@ from PIL import Image
 import torch
 from transformers import AutoImageProcessor
 from transformers.models.detr import DetrForSegmentation
-from azure.core.credentials import AzureKeyCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
 from openai import OpenAI
 import base64
+
+from app.services.azure_analyzer import AzureDocumentAnalyzer
+from app.services.hf_analyzer import HFDocumentAnalyzer
+from app.services.ollama_markdown_converter import OllamaMarkdownConverter
+from app.services.openai_markdown_converter import OpemAIMarkdownConverter
 
 # initialize app
 app = FastAPI()
@@ -127,18 +130,18 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
             )
 
         if layout_detection_model_type == "azure":
-            bbox = layout_detection_azure(image_paths[0])
+            bbox = AzureDocumentAnalyzer().detect_layout(image_paths[0])
         
         elif layout_detection_model_type == "hugging_face":
-            bbox = layout_detection_hf(image_paths[0])
+            bbox = HFDocumentAnalyzer().detect_layout(image_paths[0])
 
         image_paths = [crop_images(image_paths[0], bbox)[0]]
     
     if markdown_generation_model_type == "ollama":
-            markdown_content = get_ollama_vlm_response(sys_prompt, image_paths)
+            markdown_content = OllamaMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
         
     elif markdown_generation_model_type == "openai":
-            markdown_content = get_openai_mllm_response(sys_prompt, image_paths)
+            markdown_content = OpemAIMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
 
     save_md_file(markdown_content)
 
@@ -202,165 +205,6 @@ def crop_images(file_path: str, bbox: list[list]):
         image_paths.append(final_image_path)
 
     return image_paths
-
-# check layout overlapping
-def is_overlapping(box1, box2):
-    return not (
-        box1[2] < box2[0] or  
-        box1[0] > box2[2] or  
-        box1[3] < box2[1] or  
-        box1[1] > box2[3]    
-    )
-
-# remove overlapping layouts between paragraphs and tables
-def remove_overlapping(paragraphs, tables):
-    filtered_paragraphs = []
-    for paragraph in paragraphs:
-        if not any(is_overlapping(paragraph, table) for table in tables):
-            filtered_paragraphs.append(paragraph)
-    return filtered_paragraphs
-
-# layout detection using Azure
-def layout_detection_azure(file_path: str):
-    azure_endpoint = os.getenv("AZURE_ENDPOINT")
-    azure_key = os.getenv("AZURE_KEY")
-
-    document_analysis_client = DocumentAnalysisClient(
-        endpoint=azure_endpoint, credential=AzureKeyCredential(azure_key)
-    )
-
-    with open(file_path, "rb") as file:
-        poller = document_analysis_client.begin_analyze_document("prebuilt-layout", file)
-        result = poller.result()
-    
-    bbox_paragraphs = []
-    bbox_tables = []
-
-    for paragraph in result.paragraphs:
-        for region in paragraph.bounding_regions:
-            polygon = region.polygon
-            bounding_box = [
-                    min(point.x for point in polygon),
-                    min(point.y for point in polygon),
-                    max(point.x for point in polygon),
-                    max(point.y for point in polygon)
-                ]      
-            bbox_paragraphs.append(bounding_box)
-
-    for table in result.tables:
-        for region in table.bounding_regions:
-            polygon = region.polygon
-            bounding_box = [
-                    min(point.x for point in polygon),
-                    min(point.y for point in polygon),
-                    max(point.x for point in polygon),
-                    max(point.y for point in polygon)
-                ] 
-            bbox_tables.append(bounding_box)
-
-    filtered_paragraphs = remove_overlapping(bbox_paragraphs, bbox_tables)
-    return filtered_paragraphs + bbox_tables
-    
-# layout detection using Hugging Face model
-def layout_detection_hf(file_path: str):
-    layout_detection_img_proc = AutoImageProcessor.from_pretrained(os.getenv("HF_IMG_PROC_NAME"))
-    layout_detection_hf_model = DetrForSegmentation.from_pretrained(os.getenv("HF_MODEL_NAME"))
-
-    if layout_detection_img_proc is None:
-        raise ValueError(
-            "Please set the Hugging Face layout detection image processor"
-        )
-    
-    if layout_detection_hf_model is None:
-        raise ValueError(
-            "Please set the Hugging Face layout detection model name"
-        )
-
-    img = Image.open(file_path).convert("RGB")
-
-    with torch.inference_mode():
-        input_ids = layout_detection_img_proc(img, return_tensors='pt')
-        output = layout_detection_hf_model(**input_ids)
-    
-    threshold=0.75
-
-    bbox_pred = layout_detection_img_proc.post_process_object_detection(
-        output,
-        threshold=threshold,
-        target_sizes=[img.size[::-1]]
-    )
-
-    detected_entities = bbox_pred[0]
-
-    return detected_entities['boxes']
-
-# get response from the Ollama VLM
-def get_ollama_vlm_response(system_prompt: str, image_path_list: list[str]):
-    vlm_name = os.getenv("OLLAMA_VLM")
-
-    if vlm_name is None:
-        raise ValueError(
-            "Please set the Ollama VLM"
-        )
-
-    response = ollama.chat(
-        model=vlm_name, 
-        messages=[
-            {
-                'role': 'system',
-                'content': (system_prompt)
-            },
-            {
-                'role': 'user',
-                'images': image_path_list
-            }
-        ]
-    )
-
-    return response["message"]["content"]
-
-# get response from the OpenAI mllm
-def get_openai_mllm_response(system_prompt: str, image_path_list: list[str]):
-    openai_key = os.getenv("OPENAI_KEY")
-    mllm_name = os.getenv("OPENAI_MLLM")
-
-    if openai_key is None:
-        raise ValueError(
-            "Please set the OpenAI key"
-        )
-
-    if mllm_name is None:
-        raise ValueError(
-            "Please set the OpenAI MLLM"
-        )
-    
-    client = OpenAI(api_key=openai_key)
-
-    with open(image_path_list[0], "rb") as image_file:
-        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-
-    response = client.chat.completions.create(
-        model=mllm_name,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": system_prompt,
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url":  f"data:image/jpeg;base64,{base64_image}"
-                        },
-                    },
-                ],
-            }
-        ],
-    )
-
-    return response.choices[0].message.content
 
 # save the .md file
 def save_md_file(markdown_content: str):
