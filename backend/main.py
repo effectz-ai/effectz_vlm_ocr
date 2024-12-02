@@ -7,24 +7,16 @@ load_dotenv()
 import logging
 import os
 from pathlib import Path
-import glob
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
-import ollama
-import fitz 
 from spire.doc import *
 from spire.doc.common import *
-from PIL import Image
-import torch
-from transformers import AutoImageProcessor
-from transformers.models.detr import DetrForSegmentation
-from openai import OpenAI
-import base64
 
 from app.services.azure_analyzer import AzureDocumentAnalyzer
 from app.services.hf_analyzer import HFDocumentAnalyzer
 from app.services.ollama_markdown_converter import OllamaMarkdownConverter
 from app.services.openai_markdown_converter import OpenAIMarkdownConverter
+from app.utils import save_md_file, clean_temp_storage, docx_to_images, pdf_to_images, crop_images
 
 # initialize app
 app = FastAPI()
@@ -148,73 +140,6 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
     clean_temp_storage(TEMP_STORAGE_DIR)
 
     return markdown_content
-
-# convert the docx into images and temporarily store them
-def docx_to_images(file_path: str):
-    document = Document()
-    document.LoadFromFile(file_path)
-
-    image_paths = []
-
-    image_streams = document.SaveImageToStreams(ImageType.Bitmap)
-
-    for image in image_streams:
-        image_name = f"img.png"
-        image_path = os.path.join(TEMP_STORAGE_DIR, image_name)
-        with open(image_path,'wb') as image_file:
-            image_file.write(image.ToArray())
-        image_paths.append(image_path)
-        break
-
-    document.Close()
-    
-    return image_paths
-
-# convert the pdf into images and temporarily store them
-def pdf_to_images(file_path: str):
-    pdf_document = fitz.open(file_path)
-
-    image_paths = []
-
-    for page_num in range(len(pdf_document)):
-        page = pdf_document.load_page(page_num)
-        pix = page.get_pixmap(dpi=300) 
-        image_name = f"img.png"
-        image_path = os.path.join(TEMP_STORAGE_DIR, image_name)
-        pix.save(image_path)
-        image_paths.append(image_path)
-        break
-
-    pdf_document.close()
-
-    return image_paths
-
-# crop images according to bbox
-def crop_images(file_path: str, bbox: list[list]):
-    image_paths = []
-    img = Image.open(file_path).convert("RGB")
-
-    for idx, box in enumerate(bbox):
-        x_min, y_min, x_max, y_max = map(int, box)
-        cropped_img = img.crop((x_min, y_min, x_max, y_max))  
-        final_image = Image.new("RGB", img.size, (255, 255, 255))
-        final_image.paste(cropped_img, (x_min, y_min))
-        final_image_name = f"entity_{idx}.png"
-        final_image_path = os.path.join(TEMP_STORAGE_DIR, final_image_name)
-        final_image.save(final_image_path)
-        image_paths.append(final_image_path)
-
-    return image_paths
-
-# save the .md file
-def save_md_file(markdown_content: str):
-    with open(f"{OUTPUT_DIR}/output.md", "w") as file:
-        file.write(markdown_content)
-
-# clean the temporary storage
-def clean_temp_storage(folder_path: str):
-    for file_path in glob.glob(os.path.join(folder_path, "*")):
-        os.remove(file_path)
 
 # run app
 if __name__ == "__main__":
