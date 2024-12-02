@@ -9,8 +9,6 @@ import os
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
-from spire.doc import *
-from spire.doc.common import *
 
 from app.services.azure_analyzer import AzureDocumentAnalyzer
 from app.services.hf_analyzer import HFDocumentAnalyzer

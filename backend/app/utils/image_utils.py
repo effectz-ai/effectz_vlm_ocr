@@ -1,4 +1,6 @@
 import os
+from spire.doc import *
+from spire.doc.common import *
 import fitz
 from PIL import Image
 
