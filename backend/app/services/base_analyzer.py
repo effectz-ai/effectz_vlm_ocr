@@ -2,7 +2,7 @@ class BaseDocumentAnalyzer:
     """Base class for document analysis tools."""
 
     # check layout overlapping
-    def is_overlapping(box1, box2):
+    def is_overlapping(self, box1, box2):
         return not (
             box1[2] < box2[0] or  
             box1[0] > box2[2] or  
@@ -10,7 +10,7 @@ class BaseDocumentAnalyzer:
             box1[1] > box2[3]    
         )
 
-    def remove_overlapping(paragraphs, tables):
+    def remove_overlapping(self, paragraphs, tables):
         """
         Remove paragraphs that overlap with tables.
         
@@ -23,7 +23,7 @@ class BaseDocumentAnalyzer:
         """
         filtered_paragraphs = []
         for paragraph in paragraphs:
-            if not any(is_overlapping(paragraph, table) for table in tables):
+            if not any(self.is_overlapping(paragraph, table) for table in tables):
                 filtered_paragraphs.append(paragraph)
         return filtered_paragraphs
     

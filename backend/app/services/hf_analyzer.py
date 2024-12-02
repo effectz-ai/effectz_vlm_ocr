@@ -8,10 +8,10 @@ from .base_analyzer import BaseDocumentAnalyzer
 
 class HFDocumentAnalyzer(BaseDocumentAnalyzer):
 
-    def detect_layout(file_path: str):
-        return detect_layout_hf(file_path)
+    def detect_layout(self, file_path: str):
+        return self.detect_layout_hf(file_path)
 
-    def detect_layout_hf(file_path: str):
+    def detect_layout_hf(self, file_path: str):
         layout_detection_img_proc = AutoImageProcessor.from_pretrained(os.getenv("HF_IMG_PROC_NAME"))
         layout_detection_hf_model = DetrForSegmentation.from_pretrained(os.getenv("HF_MODEL_NAME"))
 

@@ -12,9 +12,10 @@ class AzureDocumentAnalyzer(BaseDocumentAnalyzer):
             endpoint=self.endpoint, credential=AzureKeyCredential(self.key)
         )
 
-    
-    # layout detection using Azure
-    def detect_layout_azure(file_path: str):
+    def detect_layout(self, file_path: str):
+        return self.detect_layout_azure(file_path)
+
+    def detect_layout_azure(self, file_path: str):
         azure_endpoint = os.getenv("AZURE_ENDPOINT")
         azure_key = os.getenv("AZURE_KEY")
 
@@ -54,8 +55,3 @@ class AzureDocumentAnalyzer(BaseDocumentAnalyzer):
         filtered_paragraphs = self.remove_overlapping(bbox_paragraphs, bbox_tables)
         return filtered_paragraphs + bbox_tables
     
-    def detect_layout(file_path: str):
-        return detect_layout_azure(file_path)
-    
-
-# layout detection using Azure

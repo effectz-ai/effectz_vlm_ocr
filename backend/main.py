@@ -24,7 +24,7 @@ import base64
 from app.services.azure_analyzer import AzureDocumentAnalyzer
 from app.services.hf_analyzer import HFDocumentAnalyzer
 from app.services.ollama_markdown_converter import OllamaMarkdownConverter
-from app.services.openai_markdown_converter import OpemAIMarkdownConverter
+from app.services.openai_markdown_converter import OpenAIMarkdownConverter
 
 # initialize app
 app = FastAPI()
@@ -141,7 +141,7 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
             markdown_content = OllamaMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
         
     elif markdown_generation_model_type == "openai":
-            markdown_content = OpemAIMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
+            markdown_content = OpenAIMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
 
     save_md_file(markdown_content)
 
