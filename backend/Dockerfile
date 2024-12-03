@@ -1,4 +1,3 @@
-
 FROM python:3.11 as build
 
 WORKDIR /app
@@ -13,7 +12,6 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python
 
 # Install dependencies
 COPY ./pyproject.toml /app/
-
 RUN poetry install --no-root --no-cache --only main
 
 COPY . .

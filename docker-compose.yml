@@ -1,15 +1,12 @@
 services:
   ocr-frontend:
     container_name: ocr-frontend
-    image: node:18-alpine
+    image: effectzai/ocr-frontend
     restart: unless-stopped
-    volumes:
-      - ./frontend:/usr/src/app
     ports:
       - "3004:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-    command: sh -c "chmod +x /usr/src/app/startup.sh && /usr/src/app/startup.sh"
   
   ocr-backend:
     container_name: ocr-backend
