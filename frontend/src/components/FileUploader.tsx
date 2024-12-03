@@ -1,10 +1,6 @@
 "use client"
 import { useState } from 'react';
-import { pdfjs } from 'react-pdf';
-import '@react-pdf-viewer/core/lib/styles/index.css';
 import {PdfPreviewer} from "@/components/PdfPreviwer";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface FileUploaderProps {
     onFileChange: (file: File) => void;

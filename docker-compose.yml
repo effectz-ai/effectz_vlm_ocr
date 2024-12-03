@@ -1,0 +1,35 @@
+services:
+  ocr-frontend:
+    container_name: ocr-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3004:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+  
+  ocr-backend:
+    container_name: ocr-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    environment:
+      - APP_HOST=${APP_HOST}
+      - APP_PORT=${APP_PORT}
+      - TEMP_STORAGE_DIR=${TEMP_STORAGE_DIR}
+      - OUTPUT_DIR=${OUTPUT_DIR}
+      - SYSTEM_PROMPT=${SYSTEM_PROMPT}
+      - LAYOUT_DETECTION_MODEL_TYPE=${LAYOUT_DETECTION_MODEL_TYPE}
+      - AZURE_ENDPOINT=${AZURE_ENDPOINT}
+      - AZURE_KEY=${AZURE_KEY}
+      - HF_IMG_PROC_NAME=${HF_IMG_PROC_NAME}
+      - HF_MODEL_NAME=${HF_MODEL_NAME}
+      - MARKDOWN_GENERATION_MODEL_TYPE=${MARKDOWN_GENERATION_MODEL_TYPE}
+      - OLLAMA_VLM=${OLLAMA_VLM}
+      - OPENAI_KEY=${OPENAI_KEY}
+      - OPENAI_MLLM=${OPENAI_MLLM}

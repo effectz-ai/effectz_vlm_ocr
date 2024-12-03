@@ -1,5 +1,6 @@
 # import libraries
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # load environment variables
 load_dotenv()
@@ -16,6 +17,15 @@ from app.api.layout_entity_markdown import layout_entity_markdown_router
 # initialize app
 app = FastAPI()
 
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,  
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
 # logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()

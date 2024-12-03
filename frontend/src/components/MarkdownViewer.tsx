@@ -14,6 +14,7 @@ export default function MarkdownViewer({ onApiCall }: MarkdownViewerProps) {
         setLoading(true);
         try {
             const result = await onApiCall();
+            console.log('Result:', result);
             setMarkdown(result);
         } catch (error) {
             console.error('Error calling API:', error);
@@ -42,9 +43,9 @@ export default function MarkdownViewer({ onApiCall }: MarkdownViewerProps) {
             >
                 {loading ? 'Loading...' : 'Generate'}
             </button>
-            <div className="w-full h-[600px] overflow-y-auto border border-gray-300 rounded p-4">
+            <div className="w-full h-[600px] text-black overflow-y-auto border border-gray-300 rounded p-4">
                 {markdown ? (
-                    <ReactMarkdown>{markdown}</ReactMarkdown>
+                    <ReactMarkdown className="text-black">{markdown}</ReactMarkdown>
                 ) : (
                     <p className="text-gray-500">Markdown preview will appear here</p>
                 )}
