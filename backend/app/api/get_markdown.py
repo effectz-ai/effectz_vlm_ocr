@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 # POST - /api/get_markdown
-@app.post("/api/get_markdown")
+@app.post("")
 async def get_markdown(file: UploadFile = File(...), system_prompt: str | None = Form(None), markdown_model_type: str | None = Form(None)):
     try:
         if file.filename == "":

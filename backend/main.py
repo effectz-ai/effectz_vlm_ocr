@@ -32,7 +32,7 @@ if not os.path.exists(TEMP_STORAGE_DIR):
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
-app.include_router(get_markdown_router, prefix="/api/markdown")
+app.include_router(get_markdown_router, prefix="/api/get_markdown")
 app.include_router(layout_entity_markdown_router, prefix="/api/layout_entity_markdown")
 
 # run app

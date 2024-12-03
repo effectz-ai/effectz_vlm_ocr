@@ -10,8 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 # POST - /api/layout_entity_markdown
-
-@app.post("/api/layout_entity_markdown")
+@app.post("")
 async def layout_entity_markdown(file: UploadFile = File(...), system_prompt: str | None = Form(None), markdown_model_type: str | None = Form(None), layout_model_type: str | None = Form(None)):
     try:
         if file.filename == "":
