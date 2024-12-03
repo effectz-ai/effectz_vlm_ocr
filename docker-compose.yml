@@ -1,7 +1,9 @@
 services:
   ocr-frontend:
     container_name: ocr-frontend
-    image: effectzai/ocr-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "3004:3000"
@@ -10,7 +12,9 @@ services:
   
   ocr-backend:
     container_name: ocr-backend
-    image: effectzai/ocr-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "${APP_PORT}:${APP_PORT}"
