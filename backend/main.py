@@ -27,6 +27,7 @@ import base64
 # initialize app
 app = FastAPI()
 
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -35,7 +36,6 @@ app.add_middleware(
     allow_methods=["*"],  
     allow_headers=["*"],  
 )
-
 # logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
