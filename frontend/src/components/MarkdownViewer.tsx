@@ -46,7 +46,21 @@ export default function MarkdownViewer({ onApiCall }: MarkdownViewerProps) {
             </button>
             <div className="w-full h-[600px] text-black overflow-y-auto border border-gray-300 rounded p-4">
                 {markdown ? (
-                    <Markdown remarkPlugins={[remarkGfm]}>{markdown}</Markdown>
+                    <Markdown remarkPlugins={[remarkGfm]} components={{
+                        table: ({ children }) => (
+                            <table className="table-auto border-collapse border border-gray-300 w-full">
+                                {children}
+                            </table>
+                        ),
+                        th: ({ children }) => (
+                            <th className="border border-gray-300 bg-gray-100 p-2 text-left">
+                                {children}
+                            </th>
+                        ),
+                        td: ({ children }) => (
+                            <td className="border border-gray-300 p-2">{children}</td>
+                        ),
+                    }}>{markdown}</Markdown>
                 ) : (
                     <p className="text-gray-500">Markdown preview will appear here</p>
                 )}
