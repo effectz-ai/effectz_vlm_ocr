@@ -1,6 +1,6 @@
 services:
   ocr-frontend:
-    container_name: ocr-frontend
+    container_name: effectzai/ocr-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -11,7 +11,7 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
   
   ocr-backend:
-    container_name: ocr-backend
+    container_name: effectzai/ocr-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
