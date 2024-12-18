@@ -26,26 +26,31 @@ class OpenAIMarkdownConverter(BaseMarkdownConverter):
         
         client = OpenAI(api_key=openai_key)
 
-        with open(image_path_list[0], "rb") as image_file:
-            base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+        base64_image = []
+        for image_path in image_path_list:
+            with open(image_path, "rb") as image_file:
+                base64_image.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url":  f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+                        },
+                    }
+                )
 
+        content = [
+            {
+                "type": "text",
+                "text": system_prompt,
+            },
+        ]
+        content.extend(base64_image)
         response = client.chat.completions.create(
             model=mllm_name,
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": system_prompt,
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url":  f"data:image/jpeg;base64,{base64_image}"
-                            },
-                        },
-                    ],
+                    "content": content
                 }
             ],
         )
