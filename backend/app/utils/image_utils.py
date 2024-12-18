@@ -36,11 +36,10 @@ def pdf_to_images(file_path: str):
     for page_num in range(len(pdf_document)):
         page = pdf_document.load_page(page_num)
         pix = page.get_pixmap(dpi=300) 
-        image_name = f"img.png"
+        image_name = f"img{page_num}.png"
         image_path = os.path.join(TEMP_STORAGE_DIR, image_name)
         pix.save(image_path)
         image_paths.append(image_path)
-        break
 
     pdf_document.close()
 
