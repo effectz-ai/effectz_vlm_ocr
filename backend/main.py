@@ -33,14 +33,8 @@ logger = logging.getLogger()
 # temporary storage for pdfs and images
 TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
 
-# storage for .md files
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
-
 if not os.path.exists(TEMP_STORAGE_DIR):
     os.makedirs(TEMP_STORAGE_DIR)
-
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
 
 app.include_router(get_markdown_router, prefix="/api/get_markdown")
 app.include_router(layout_entity_markdown_router, prefix="/api/layout_entity_markdown")
