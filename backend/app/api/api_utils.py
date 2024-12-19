@@ -62,4 +62,6 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
 
     clean_temp_storage(TEMP_STORAGE_DIR)
 
-    return markdown_content
+    cleaned_markdown_content = markdown_content.replace("**Evaluation Warning:** The document was created with Spire.Doc for Python.", "")
+
+    return cleaned_markdown_content
