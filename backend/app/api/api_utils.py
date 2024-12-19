@@ -5,7 +5,7 @@ from app.services.azure_analyzer import AzureDocumentAnalyzer
 from app.services.hf_analyzer import HFDocumentAnalyzer
 from app.services.ollama_markdown_converter import OllamaMarkdownConverter
 from app.services.openai_markdown_converter import OpenAIMarkdownConverter
-from app.utils import save_md_file, clean_temp_storage, docx_to_images, pdf_to_images, crop_images
+from app.utils import clean_temp_storage, docx_to_images, pdf_to_images, crop_images
 
 TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
 
@@ -57,8 +57,6 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
         
     elif markdown_generation_model_type == "openai":
             markdown_content = OpenAIMarkdownConverter().convert_to_markdown(sys_prompt, image_paths)
-
-    save_md_file(markdown_content)
 
     clean_temp_storage(TEMP_STORAGE_DIR)
 
