@@ -14,7 +14,7 @@ class URLConverter:
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 if options['headers']:
-                    for header in soup.find_all(['header']):
+                    for header in soup.find_all('header'):
                         header.decompose()
                 if options['footers']:
                     for footer in soup.find_all('footer'):
