@@ -13,11 +13,6 @@ TEMP_STORAGE_DIR = os.getenv("TEMP_STORAGE_DIR", "temp_storage")
 async def process_file(file: UploadFile, file_extension: str, system_prompt: str, conversion_model_type: str, layout_model_type=None, layout=False):
     format_conversion_model_type = conversion_model_type if conversion_model_type is not None else os.getenv("CONVERSION_MODEL_TYPE")
     
-    if sys_prompt is None:
-        raise ValueError(
-            "Please set the system prompt"
-        )
-    
     if format_conversion_model_type is None:
         raise ValueError(
             "Please set the conversion model type"

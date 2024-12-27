@@ -1,10 +1,9 @@
 "use client"
 import MarkdownViewer from "@/components/MarkdownViewer";
 import {useState} from "react";
-import Header from "@/components/Header";
 import axios from "axios";
 
-export default function Home() {
+export default function UrlToMarkdown() {
   const [url, setUrl] = useState<string>('');
 
   const handleApiCall = async (): Promise<string> => {
@@ -26,9 +25,7 @@ export default function Home() {
 
   return (
       <div className="min-h-screen bg-gray-100">
-        <Header/>
         <main className="container mx-auto px-4 py-8">
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4 text-green-950">Settings</h2>
