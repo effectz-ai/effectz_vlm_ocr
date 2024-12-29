@@ -2,10 +2,9 @@
 import FileUploader from "@/components/FileUploader";
 import HTMLViewer from "@/components/HTMLViewer";
 import {useState} from "react";
-import Header from "@/components/Header";
 import axios from "axios";
 
-export default function Home() {
+export default function FileToHTML() {
   const [file, setFile] = useState<File | null>(null);
   const [conversionModelType, setConversionModelType] = useState<string>('ollama');
 
@@ -33,9 +32,7 @@ export default function Home() {
 
   return (
       <div className="min-h-screen bg-gray-100">
-        <Header/>
         <main className="container mx-auto px-4 py-8">
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4 text-green-950">File Uploader</h2>

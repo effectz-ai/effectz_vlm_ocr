@@ -1,11 +1,10 @@
 "use client"
 import FileUploader from "@/components/FileUploader";
-import JSONViewer from "@/components/JSONViewer";
+import XMLViewer from "@/components/XMLViewer";
 import {useState} from "react";
-import Header from "@/components/Header";
 import axios from "axios";
 
-export default function Home() {
+export default function FileToXML() {
   const [file, setFile] = useState<File | null>(null);
   const [conversionModelType, setConversionModelType] = useState<string>('ollama');
 
@@ -23,8 +22,8 @@ export default function Home() {
     formData.append('conversionModelType', conversionModelType);
 
     try {
-      const {data} = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/file_to_json`, formData);
-      return data.json;
+      const {data} = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/file_to_xml`, formData);
+      return data.xml;
     } catch (error) {
       console.error('Error:', error);
       throw new Error('Failed to fetch the result.');
@@ -33,9 +32,7 @@ export default function Home() {
 
   return (
       <div className="min-h-screen bg-gray-100">
-        <Header/>
         <main className="container mx-auto px-4 py-8">
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4 text-green-950">File Uploader</h2>
@@ -56,8 +53,8 @@ export default function Home() {
               <FileUploader onFileChange={handleFileChange}/>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4 text-green-950">JSON Viewer</h2>
-              <JSONViewer onApiCall={handleApiCall}/>
+              <h2 className="text-xl font-semibold mb-4 text-green-950">XML Viewer</h2>
+              <XMLViewer onApiCall={handleApiCall}/>
             </div>
           </div>
         </main>
