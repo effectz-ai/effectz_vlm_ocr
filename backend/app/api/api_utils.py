@@ -57,7 +57,7 @@ async def process_file(file: UploadFile, file_extension: str, system_prompt: str
 
     return converted_content
 
-async def process_url(url: str, options: dict):
+  async def process_url(url: str, options: dict):
     converted_content = URLConverter().convert(url, options)
     
     return converted_content

@@ -15,13 +15,12 @@ def docx_to_images(file_path: str):
 
     image_streams = document.SaveImageToStreams(ImageType.Bitmap)
 
-    for image in image_streams:
-        image_name = f"img.png"
+    for page_num, image in enumerate(image_streams):
+        image_name = f"img{page_num}.png"
         image_path = os.path.join(TEMP_STORAGE_DIR, image_name)
         with open(image_path,'wb') as image_file:
             image_file.write(image.ToArray())
         image_paths.append(image_path)
-        break
 
     document.Close()
     
